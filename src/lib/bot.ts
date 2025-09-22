@@ -287,7 +287,7 @@ class TradingBot {
     }
   }
 
-  async runBacktest(initialCapital: number = 10000, minConfidence: number = 0.6): Promise<BacktestResult | null> {
+  async runBacktest(_initialCapital: number = 10000, minConfidence: number = 0.6): Promise<BacktestResult | null> {
     try {
       if (this.historicalData.length < 500) {
         console.log('Not enough historical data for backtesting. Need at least 500 data points.')

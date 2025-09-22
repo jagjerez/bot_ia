@@ -20,7 +20,11 @@ export async function GET() {
 
     const response: ApiResponse<BotStatus> = {
       success: true,
-      data: botStatus,
+      data: {
+        id: botStatus.id,
+        running: botStatus.running,
+        updatedAt: botStatus.updatedAt.toISOString(),
+      },
     }
 
     return NextResponse.json(response)

@@ -2,7 +2,7 @@ import ccxt from 'ccxt'
 import { TickerData } from '@/types'
 
 class ExchangeManager {
-  private exchange: ccxt.Exchange
+  private exchange: any
   private isSandbox: boolean
 
   constructor() {
@@ -39,7 +39,7 @@ class ExchangeManager {
     }
   }
 
-  async getHistoricalPrices(symbol: string, timeframe: string = '1m', limit: number = 100): Promise<ccxt.OHLCV[]> {
+  async getHistoricalPrices(symbol: string, timeframe: string = '1m', limit: number = 100): Promise<any[]> {
     try {
       const ohlcv = await this.exchange.fetchOHLCV(symbol, timeframe, undefined, limit)
       return ohlcv
@@ -49,7 +49,7 @@ class ExchangeManager {
     }
   }
 
-  async getAccountBalance(): Promise<ccxt.Balances> {
+  async getAccountBalance(): Promise<any> {
     try {
       const balance = await this.exchange.fetchBalance()
       return balance
@@ -59,7 +59,7 @@ class ExchangeManager {
     }
   }
 
-  async createOrder(symbol: string, type: string, side: string, amount: number, price?: number): Promise<ccxt.Order> {
+  async createOrder(symbol: string, type: string, side: string, amount: number, price?: number): Promise<any> {
     try {
       const order = await this.exchange.createOrder(symbol, type, side, amount, price)
       return order

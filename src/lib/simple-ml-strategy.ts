@@ -1,5 +1,5 @@
 import { RandomForestClassifier } from 'ml-random-forest'
-import { TechnicalAnalysis, OHLCV, TechnicalIndicators } from './indicators'
+import { TechnicalAnalysis, OHLCV } from './indicators'
 
 export interface MLPrediction {
   action: 'buy' | 'sell' | 'hold'
@@ -39,10 +39,7 @@ export class SimpleMLTradingStrategy {
     try {
       // Initialize Random Forest for signal classification
       this.randomForest = new RandomForestClassifier({
-        nEstimators: 50, // Reduced for better performance
-        maxDepth: 8,
-        minSamplesSplit: 10,
-        minSamplesLeaf: 5
+        nEstimators: 50 // Reduced for better performance
       })
       
       console.log('Simple ML model initialized successfully')
@@ -67,8 +64,8 @@ export class SimpleMLTradingStrategy {
       const rsi = indicators.rsi[i] || 50
       
       // MACD
-      const macd = indicators.macd.macd[i] || 0
-      const macdSignal = indicators.macd.signal[i] || 0
+      const macd = indicators.macd[i]?.macd || 0
+      const macdSignal = indicators.macd[i]?.signal || 0
       
       // Bollinger Bands position (0-1 scale)
       const bollinger = indicators.bollinger[i]
@@ -102,7 +99,7 @@ export class SimpleMLTradingStrategy {
       // Volatility (20-period rolling standard deviation)
       const priceSlice = data.slice(Math.max(0, i - 19), i + 1).map(d => d.close)
       const volatility = priceSlice.length > 1 ? 
-        Math.sqrt(priceSlice.reduce((acc, price, idx) => {
+        Math.sqrt(priceSlice.reduce((acc, price, _idx) => {
           const mean = priceSlice.reduce((a, b) => a + b) / priceSlice.length
           return acc + Math.pow(price - mean, 2)
         }, 0) / (priceSlice.length - 1)) : 0
@@ -258,8 +255,8 @@ export class SimpleMLTradingStrategy {
       let stopLoss: number | undefined
       
       if (this.priceHistory.length > 20) {
-        const recentPrices = this.priceHistory.slice(-20)
-        const avgPrice = recentPrices.reduce((a, b) => a + b) / recentPrices.length
+        // const recentPrices = this.priceHistory.slice(-20)
+        // const avgPrice = recentPrices.reduce((a, b) => a + b) / recentPrices.length
         const currentPrice = currentData[currentData.length - 1].close
         
         // Simple trend-based price target

@@ -15,10 +15,10 @@ export default function Dashboard() {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const seriesRef = useRef<ISeriesApi<'Line'> | null>(null)
-  const [priceData, setPriceData] = useState<{ time: number; value: number }[]>([])
+  const [, setPriceData] = useState<{ time: number; value: number }[]>([])
 
   // Fetch data
-  const { data: tradesData, mutate: mutateTrades } = useSWR<{ success: boolean; data: Trade[] }>('/api/trades', fetcher, {
+  const { data: tradesData } = useSWR<{ success: boolean; data: Trade[] }>('/api/trades', fetcher, {
     refreshInterval: 5000,
   })
   
@@ -56,25 +56,25 @@ export default function Dashboard() {
   }, [])
 
   // Helper function to merge and deduplicate chart data (memoized)
-  const mergeChartData = useCallback((historical: any[], realtime: any[], existing: any[]) => {
-    const allData = [...historical, ...existing, ...realtime]
-    
-    // Remove duplicates based on time
-    const uniqueData = allData.reduce((acc: any[], current: any) => {
-      const existingIndex = acc.findIndex((item: any) => item.time === current.time)
-      if (existingIndex === -1) {
-        acc.push(current)
-      } else {
-        // Keep the most recent data for the same timestamp
-        acc[existingIndex] = current
-      }
-      return acc
-    }, [])
-    
-    return uniqueData
-      .sort((a: any, b: any) => a.time - b.time) // Sort by time ascending
-      .slice(-200) // Keep last 200 points
-  }, [])
+  // const mergeChartData = useCallback((historical: any[], realtime: any[], existing: any[]) => {
+  //   const allData = [...historical, ...existing, ...realtime]
+  //   
+  //   // Remove duplicates based on time
+  //   const uniqueData = allData.reduce((acc: any[], current: any) => {
+  //     const existingIndex = acc.findIndex((item: any) => item.time === current.time)
+  //     if (existingIndex === -1) {
+  //       acc.push(current)
+  //     } else {
+  //       // Keep the most recent data for the same timestamp
+  //       acc[existingIndex] = current
+  //     }
+  //     return acc
+  //   }, [])
+  //   
+  //   return uniqueData
+  //     .sort((a: any, b: any) => a.time - b.time) // Sort by time ascending
+  //     .slice(-200) // Keep last 200 points
+  // }, [])
 
   // Initialize chart
   useEffect(() => {

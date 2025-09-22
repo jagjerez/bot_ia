@@ -18,7 +18,15 @@ export async function GET(request: NextRequest) {
 
     const response: ApiResponse<Trade[]> = {
       success: true,
-      data: trades,
+      data: trades.map(trade => ({
+        id: trade.id,
+        symbol: trade.symbol,
+        side: trade.side as 'buy' | 'sell',
+        price: trade.price,
+        amount: trade.amount,
+        timestamp: trade.timestamp.toISOString(),
+        createdAt: trade.createdAt.toISOString(),
+      })),
     }
 
     return NextResponse.json(response)

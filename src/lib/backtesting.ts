@@ -1,5 +1,5 @@
 import { OHLCV } from './indicators'
-import { SimpleMLTradingStrategy, MLPrediction } from './simple-ml-strategy'
+import { SimpleMLTradingStrategy } from './simple-ml-strategy'
 
 export interface BacktestResult {
   totalTrades: number
@@ -98,16 +98,16 @@ export class Backtester {
       // Check if we should exit a position
       if (currentPosition) {
         let shouldExit = false
-        let exitReason = ''
+        // let exitReason = ''
 
         // Check stop loss
         if (prediction.stopLoss) {
           if (currentPosition.side === 'buy' && currentPrice <= prediction.stopLoss) {
             shouldExit = true
-            exitReason = 'stop_loss'
+            // exitReason = 'stop_loss'
           } else if (currentPosition.side === 'sell' && currentPrice >= prediction.stopLoss) {
             shouldExit = true
-            exitReason = 'stop_loss'
+            // exitReason = 'stop_loss'
           }
         }
 
@@ -115,10 +115,10 @@ export class Backtester {
         if (prediction.priceTarget) {
           if (currentPosition.side === 'buy' && currentPrice >= prediction.priceTarget) {
             shouldExit = true
-            exitReason = 'take_profit'
+            // exitReason = 'take_profit'
           } else if (currentPosition.side === 'sell' && currentPrice <= prediction.priceTarget) {
             shouldExit = true
-            exitReason = 'take_profit'
+            // exitReason = 'take_profit'
           }
         }
 
@@ -126,7 +126,7 @@ export class Backtester {
         if (prediction.action === (currentPosition.side === 'buy' ? 'sell' : 'buy') && 
             prediction.confidence >= minConfidence) {
           shouldExit = true
-          exitReason = 'opposite_signal'
+          // exitReason = 'opposite_signal'
         }
 
         // Exit position

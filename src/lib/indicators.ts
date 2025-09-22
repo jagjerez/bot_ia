@@ -1,4 +1,4 @@
-import { mean, standardDeviation } from 'simple-statistics'
+import { standardDeviation } from 'simple-statistics'
 
 export interface OHLCV {
   open: number
@@ -116,11 +116,17 @@ export class TechnicalAnalysis {
     
     const histogram = macdLine.map((macd, i) => macd - signalLine[i])
     
-    return {
-      macd: macdLine,
-      signal: signalLine,
-      histogram
+    // Convert to array of objects
+    const result: { macd: number; signal: number; histogram: number }[] = []
+    for (let i = 0; i < macdLine.length; i++) {
+      result.push({
+        macd: macdLine[i],
+        signal: signalLine[i],
+        histogram: histogram[i]
+      })
     }
+    
+    return result
   }
 
   // Bollinger Bands
