@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { createChart, ColorType, IChartApi, ISeriesApi } from 'lightweight-charts'
 import useSWR from 'swr'
 import { Trade, BotStatus, TickerData } from '@/types'
@@ -45,18 +45,18 @@ export default function Dashboard() {
   // Extract data from responses
   const historicalData = historicalDataResponse?.data || []
 
-  // Helper function to create chart data
-  const createChartData = (candles: any[]) => {
+  // Helper function to create chart data (memoized)
+  const createChartData = useCallback((candles: any[]) => {
     return candles
       .map((candle: any) => ({
         time: Math.floor(candle.timestamp / 1000) as any,
         value: candle.close,
       }))
       .sort((a: any, b: any) => a.time - b.time) // Sort by time ascending
-  }
+  }, [])
 
-  // Helper function to merge and deduplicate chart data
-  const mergeChartData = (historical: any[], realtime: any[], existing: any[]) => {
+  // Helper function to merge and deduplicate chart data (memoized)
+  const mergeChartData = useCallback((historical: any[], realtime: any[], existing: any[]) => {
     const allData = [...historical, ...existing, ...realtime]
     
     // Remove duplicates based on time
@@ -74,7 +74,7 @@ export default function Dashboard() {
     return uniqueData
       .sort((a: any, b: any) => a.time - b.time) // Sort by time ascending
       .slice(-200) // Keep last 200 points
-  }
+  }, [])
 
   // Initialize chart
   useEffect(() => {
@@ -129,16 +129,16 @@ export default function Dashboard() {
     }
   }, [])
 
-  // Load historical data into chart
+  // Load historical data into chart (only when historical data changes)
   useEffect(() => {
     if (historicalData.length > 0 && seriesRef.current) {
       const historicalChartData = createChartData(historicalData)
       setPriceData(historicalChartData)
       seriesRef.current?.setData(historicalChartData)
     }
-  }, [historicalData])
+  }, [historicalData.length, createChartData])
 
-  // Update chart data with real-time prices
+  // Update chart data with real-time prices (only when price changes)
   useEffect(() => {
     if (priceDataResponse?.data && seriesRef.current) {
       const newData = {
@@ -147,14 +147,21 @@ export default function Dashboard() {
       }
       
       setPriceData(prev => {
-        const historicalChartData = createChartData(historicalData)
-        const updated = mergeChartData(historicalChartData, [newData], prev)
+        // Avoid infinite loops by checking if this data point already exists
+        const lastData = prev[prev.length - 1]
+        if (lastData && lastData.time === newData.time) {
+          return prev // Don't update if we already have this timestamp
+        }
+        
+        const updated = [...prev, newData]
+          .sort((a: any, b: any) => a.time - b.time)
+          .slice(-200)
         
         seriesRef.current?.setData(updated)
         return updated
       })
     }
-  }, [priceDataResponse, historicalData])
+  }, [priceDataResponse?.data?.timestamp, priceDataResponse?.data?.price])
 
   // Bot control functions
   const startBot = async () => {
