@@ -95,14 +95,14 @@ class TradingBot {
         return
       }
 
-      // Convert to OHLCV format
-      const ohlcvData: OHLCV[] = historicalPrices.map(candle => ({
-        open: candle[1],
-        high: candle[2],
-        low: candle[3],
-        close: candle[4],
-        volume: candle[5],
-        timestamp: candle[0]
+      // Convert to OHLCV format for indicators (object format)
+      const ohlcvData = historicalPrices.map(candle => ({
+        timestamp: candle[0] || 0,
+        open: candle[1] || 0,
+        high: candle[2] || 0,
+        low: candle[3] || 0,
+        close: candle[4] || 0,
+        volume: candle[5] || 0
       }))
 
       // Update historical data
@@ -113,7 +113,7 @@ class TradingBot {
         await this.executeMLStrategy(symbol, currentPrice, ohlcvData)
       } else {
         // Use simple strategy
-        await this.executeSimpleStrategy(symbol, currentPrice, historicalPrices)
+        await this.executeSimpleStrategy(symbol, currentPrice, historicalPrices as number[][])
       }
     } catch (error) {
       console.error('Error executing strategy:', error)
@@ -363,12 +363,12 @@ class TradingBot {
       const historicalPrices = await exchangeManager.getHistoricalPrices(symbol, '1m', limit)
       
       const ohlcvData: OHLCV[] = historicalPrices.map(candle => ({
-        open: candle[1],
-        high: candle[2],
-        low: candle[3],
-        close: candle[4],
-        volume: candle[5],
-        timestamp: candle[0]
+        open: candle[1] || 0,
+        high: candle[2] || 0,
+        low: candle[3] || 0,
+        close: candle[4] || 0,
+        volume: candle[5] || 0,
+        timestamp: candle[0] || 0
       }))
 
       this.historicalData = ohlcvData

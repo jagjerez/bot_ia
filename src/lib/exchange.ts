@@ -1,8 +1,8 @@
-import ccxt from 'ccxt'
+import ccxt, { Exchange, Balances, Order, OHLCV } from 'ccxt'
 import { TickerData } from '@/types'
 
 class ExchangeManager {
-  private exchange: any
+  private exchange: Exchange
   private isSandbox: boolean
 
   constructor() {
@@ -39,7 +39,7 @@ class ExchangeManager {
     }
   }
 
-  async getHistoricalPrices(symbol: string, timeframe: string = '1m', limit: number = 100): Promise<any[]> {
+  async getHistoricalPrices(symbol: string, timeframe: string = '1m', limit: number = 100): Promise<OHLCV[]> {
     try {
       const ohlcv = await this.exchange.fetchOHLCV(symbol, timeframe, undefined, limit)
       return ohlcv
@@ -49,7 +49,7 @@ class ExchangeManager {
     }
   }
 
-  async getAccountBalance(): Promise<any> {
+  async getAccountBalance(): Promise<Balances> {
     try {
       const balance = await this.exchange.fetchBalance()
       return balance
@@ -59,7 +59,7 @@ class ExchangeManager {
     }
   }
 
-  async createOrder(symbol: string, type: string, side: string, amount: number, price?: number): Promise<any> {
+  async createOrder(symbol: string, type: string, side: string, amount: number, price?: number): Promise<Order> {
     try {
       const order = await this.exchange.createOrder(symbol, type, side, amount, price)
       return order
@@ -70,7 +70,7 @@ class ExchangeManager {
   }
 
   isConnected(): boolean {
-    return this.exchange && this.exchange.has['fetchTicker']
+    return !!(this.exchange && this.exchange.has['fetchTicker'])
   }
 
   getExchangeInfo() {

@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
-import { createChart, ColorType, IChartApi, ISeriesApi } from 'lightweight-charts'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { createChart, ColorType, IChartApi, ISeriesApi, Time } from 'lightweight-charts'
 import useSWR from 'swr'
 import { Trade, BotStatus, TickerData } from '@/types'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -15,7 +15,7 @@ export default function Dashboard() {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const seriesRef = useRef<ISeriesApi<'Line'> | null>(null)
-  const [, setPriceData] = useState<{ time: number; value: number }[]>([])
+  const [, setPriceData] = useState<{ time: Time; value: number }[]>([])
 
   // Fetch data
   const { data: tradesData } = useSWR<{ success: boolean; data: Trade[] }>('/api/trades', fetcher, {
@@ -30,29 +30,29 @@ export default function Dashboard() {
     refreshInterval: 1000,
   })
 
-  const { data: mlStatusData } = useSWR<{ success: boolean; data: any }>('/api/ml/status', fetcher, {
+  const { data: mlStatusData } = useSWR<{ success: boolean; data: { useMLStrategy: boolean; minConfidence: number; historicalDataLength: number; modelStatus: { isTrained: boolean } } }>('/api/ml/status', fetcher, {
     refreshInterval: 5000,
   })
 
-  const { data: tradingStatusData, mutate: mutateTradingStatus } = useSWR<{ success: boolean; data: any }>('/api/trading/status', fetcher, {
+  const { data: tradingStatusData, mutate: mutateTradingStatus } = useSWR<{ success: boolean; data: { simulationMode: boolean; realTradingEnabled: boolean; isRealTrading: boolean } }>('/api/trading/status', fetcher, {
     refreshInterval: 2000,
   })
 
-  const { data: historicalDataResponse, mutate: mutateHistorical } = useSWR<{ success: boolean; data: any[] }>('/api/historical?symbol=BTC/USDT&limit=200', fetcher, {
+  const { data: historicalDataResponse, mutate: mutateHistorical } = useSWR<{ success: boolean; data: { timestamp: number; close: number }[] }>('/api/historical?symbol=BTC/USDT&limit=200', fetcher, {
     refreshInterval: 30000, // Refresh every 30 seconds
   })
 
   // Extract data from responses
-  const historicalData = historicalDataResponse?.data || []
+  const historicalData = useMemo(() => historicalDataResponse?.data || [], [historicalDataResponse?.data])
 
   // Helper function to create chart data (memoized)
-  const createChartData = useCallback((candles: any[]) => {
+  const createChartData = useCallback((candles: { timestamp: number; close: number }[]) => {
     return candles
-      .map((candle: any) => ({
-        time: Math.floor(candle.timestamp / 1000) as any,
+      .map((candle) => ({
+        time: Math.floor(candle.timestamp / 1000) as Time,
         value: candle.close,
       }))
-      .sort((a: any, b: any) => a.time - b.time) // Sort by time ascending
+      .sort((a, b) => (a.time as number) - (b.time as number)) // Sort by time ascending
   }, [])
 
   // Helper function to merge and deduplicate chart data (memoized)
@@ -136,13 +136,13 @@ export default function Dashboard() {
       setPriceData(historicalChartData)
       seriesRef.current?.setData(historicalChartData)
     }
-  }, [historicalData.length, createChartData])
+  }, [historicalData, createChartData])
 
   // Update chart data with real-time prices (only when price changes)
   useEffect(() => {
     if (priceDataResponse?.data && seriesRef.current) {
       const newData = {
-        time: Math.floor(priceDataResponse.data.timestamp / 1000) as any,
+        time: Math.floor(priceDataResponse.data.timestamp / 1000) as Time,
         value: priceDataResponse.data.price,
       }
       
@@ -154,14 +154,14 @@ export default function Dashboard() {
         }
         
         const updated = [...prev, newData]
-          .sort((a: any, b: any) => a.time - b.time)
+          .sort((a, b) => (a.time as number) - (b.time as number))
           .slice(-200)
         
         seriesRef.current?.setData(updated)
         return updated
       })
     }
-  }, [priceDataResponse?.data?.timestamp, priceDataResponse?.data?.price])
+  }, [priceDataResponse?.data])
 
   // Bot control functions
   const startBot = async () => {
@@ -312,7 +312,7 @@ export default function Dashboard() {
   const isRunning = botStatusData?.data?.running || false
   const trades = tradesData?.data || []
   const currentPrice = priceDataResponse?.data?.price || 0
-  const mlStatus = mlStatusData?.data || {}
+  const mlStatus = mlStatusData?.data || { useMLStrategy: false, minConfidence: 0.6, historicalDataLength: 0, modelStatus: { isTrained: false } }
   const tradingStatus = tradingStatusData?.data || { simulationMode: true, realTradingEnabled: false, isRealTrading: false }
 
   return (
