@@ -1,0 +1,17 @@
+{
+  "buildCommand": "pnpm build",
+  "devCommand": "pnpm dev",
+  "installCommand": "pnpm install",
+  "framework": "nextjs",
+  "functions": {
+    "src/app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "BINANCE_API_KEY": "@binance_api_key",
+    "BINANCE_SECRET": "@binance_secret",
+    "BINANCE_SANDBOX": "@binance_sandbox"
+  }
+}
